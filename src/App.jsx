@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './App.css';
 
 function App() {
@@ -7,7 +7,45 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const API_KEY = '8c8e1aa8685f30d9aa3d0d94a1c4b1e2'; // Free demo key
+  const API_KEY = '8c8e1aa8685f30d9aa3d0d94a1c4b1e2';
+
+  // Load default location on mount
+  useEffect(() => {
+    fetchWeatherByCoords();
+  }, []);
+
+  const fetchWeatherByCoords = async () => {
+    setLoading(true);
+    setError('');
+    
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          try {
+            const response = await fetch(
+              `https://api.openweathermap.org/data/2.5/weather?lat=${position.coords.latitude}&lon=${position.coords.longitude}&appid=${API_KEY}&units=metric`
+            );
+            
+            if (!response.ok) throw new Error('Failed to fetch weather');
+            
+            const data = await response.json();
+            setWeather(data);
+          } catch (err) {
+            // Fallback to default city
+            fetchWeather('London');
+          } finally {
+            setLoading(false);
+          }
+        },
+        () => {
+          // Geolocation denied, use default city
+          fetchWeather('London');
+        }
+      );
+    } else {
+      fetchWeather('London');
+    }
+  };
 
   const fetchWeather = async (cityName) => {
     setLoading(true);
@@ -39,29 +77,35 @@ function App() {
     }
   };
 
-  const getWeatherIcon = (main) => {
-    switch (main?.toLowerCase()) {
+  const getWeatherBackground = (main) => {
+    const weatherType = main?.toLowerCase();
+    const hour = new Date().getHours();
+    const isNight = hour < 6 || hour > 18;
+
+    switch (weatherType) {
       case 'clear':
-        return '☀️';
+        return isNight ? 'clear-night' : 'clear-day';
       case 'clouds':
-        return '☁️';
+        return isNight ? 'cloudy-night' : 'cloudy-day';
       case 'rain':
       case 'drizzle':
-        return '🌧️';
+        return 'rainy';
       case 'snow':
-        return '❄️';
+        return 'snowy';
       case 'thunderstorm':
-        return '⛈️';
+        return 'stormy';
       case 'mist':
       case 'fog':
-        return '🌫️';
+        return 'foggy';
       default:
-        return '🌤️';
+        return 'clear-day';
     }
   };
 
   return (
-    <div className="app">
+    <div className={`app ${weather ? getWeatherBackground(weather.weather[0].main) : 'clear-day'}`}>
+      <div className="weather-overlay"></div>
+      
       <div className="container">
         <h1 className="app-title">Weather Now</h1>
         
@@ -88,8 +132,6 @@ function App() {
 
         {weather && !loading && (
           <div className="weather-card">
-            <div className="weather-icon">{getWeatherIcon(weather.weather[0].main)}</div>
-            
             <div className="weather-main">
               <h2 className="city-name">{weather.name}, {weather.sys.country}</h2>
               <div className="temperature">{Math.round(weather.main.temp)}°C</div>
@@ -137,7 +179,7 @@ function App() {
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="welcome-icon">
               <path d="M12 2v10M12 22v-4M4.93 4.93l7.07 7.07M19.07 19.07l-3.54-3.54M2 12h10M22 12h-4M4.93 19.07l7.07-7.07M19.07 4.93l-3.54 3.54" />
             </svg>
-            <p>Enter a city name to get current weather information</p>
+            <p>Loading your location...</p>
           </div>
         )}
       </div>
