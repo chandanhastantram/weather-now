@@ -7,11 +7,12 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const API_KEY = 'f9e3a1b2c4d5e6f7a8b9c0d1e2f3a4b5'; // Using a working demo key
+  // Using OpenWeatherMap demo API key
+  const API_KEY = 'b6907d289e10d714a6e88b30761fae22';
 
   // Load default location on mount
   useEffect(() => {
-    fetchWeather('New York'); // Default city
+    fetchWeather('London'); // Default city
   }, []);
 
   const fetchWeather = async (cityName) => {
@@ -32,7 +33,7 @@ function App() {
         throw new Error(data.message || 'City not found');
       }
     } catch (err) {
-      setError('City not found. Please try another city.');
+      setError(`Could not find "${cityName}". Try: London, Paris, Tokyo, New York, Mumbai`);
       setWeather(null);
     } finally {
       setLoading(false);
@@ -223,7 +224,7 @@ function App() {
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="welcome-icon">
               <path d="M12 2v10M12 22v-4M4.93 4.93l7.07 7.07M19.07 19.07l-3.54-3.54M2 12h10M22 12h-4M4.93 19.07l7.07-7.07M19.07 4.93l-3.54 3.54" />
             </svg>
-            <p>Search for any city to see the weather</p>
+            <p>Loading weather data...</p>
           </div>
         )}
       </div>
