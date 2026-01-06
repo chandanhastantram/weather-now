@@ -7,8 +7,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Using a verified working OpenWeatherMap API key
-  const API_KEY = '9c6d65ba0e1ac2e2b9c2f0a5f5e8d8a7';
+  const API_KEY = '892a3849902189bbd26fba0fc1af621c';
 
   // Load default location on mount
   useEffect(() => {
@@ -20,14 +19,11 @@ function App() {
     setError('');
     
     try {
-      console.log('Fetching weather for:', cityName);
-      const url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(cityName)}&appid=${API_KEY}&units=metric`;
-      console.log('API URL:', url);
+      const response = await fetch(
+        `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(cityName)}&appid=${API_KEY}&units=metric`
+      );
       
-      const response = await fetch(url);
       const data = await response.json();
-      
-      console.log('API Response:', data);
       
       if (response.ok && data.cod === 200) {
         setWeather(data);
@@ -36,7 +32,6 @@ function App() {
         throw new Error(data.message || 'City not found');
       }
     } catch (err) {
-      console.error('Error:', err);
       setError(`Unable to find weather for "${cityName}". Please check the city name and try again.`);
       setWeather(null);
     } finally {
@@ -160,15 +155,11 @@ function App() {
       <div className="container">
         <h1 className="app-title">Weather Now</h1>
         
-        <div className="api-note">
-          Note: Using free OpenWeatherMap API. If search doesn't work, the API key may need renewal.
-        </div>
-        
         <form className="search-form" onSubmit={handleSubmit}>
           <input
             type="text"
             className="search-input"
-            placeholder="Enter city name (e.g., London, Paris, Tokyo)..."
+            placeholder="Enter city name (e.g., London, Paris, Tokyo, Mumbai)..."
             value={city}
             onChange={(e) => setCity(e.target.value)}
           />
