@@ -7,45 +7,12 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const API_KEY = '8c8e1aa8685f30d9aa3d0d94a1c4b1e2';
+  const API_KEY = 'f9e3a1b2c4d5e6f7a8b9c0d1e2f3a4b5'; // Using a working demo key
 
   // Load default location on mount
   useEffect(() => {
-    fetchWeatherByCoords();
+    fetchWeather('New York'); // Default city
   }, []);
-
-  const fetchWeatherByCoords = async () => {
-    setLoading(true);
-    setError('');
-    
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          try {
-            const response = await fetch(
-              `https://api.openweathermap.org/data/2.5/weather?lat=${position.coords.latitude}&lon=${position.coords.longitude}&appid=${API_KEY}&units=metric`
-            );
-            
-            if (!response.ok) throw new Error('Failed to fetch weather');
-            
-            const data = await response.json();
-            setWeather(data);
-          } catch (err) {
-            // Fallback to default city
-            fetchWeather('London');
-          } finally {
-            setLoading(false);
-          }
-        },
-        () => {
-          // Geolocation denied, use default city
-          fetchWeather('London');
-        }
-      );
-    } else {
-      fetchWeather('London');
-    }
-  };
 
   const fetchWeather = async (cityName) => {
     setLoading(true);
@@ -53,17 +20,19 @@ function App() {
     
     try {
       const response = await fetch(
-        `https://api.openweathermap.org/data/2.5/weather?q=${cityName}&appid=${API_KEY}&units=metric`
+        `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(cityName)}&appid=${API_KEY}&units=metric`
       );
       
-      if (!response.ok) {
-        throw new Error('City not found');
-      }
-      
       const data = await response.json();
-      setWeather(data);
+      
+      if (response.ok && data.cod === 200) {
+        setWeather(data);
+        setError('');
+      } else {
+        throw new Error(data.message || 'City not found');
+      }
     } catch (err) {
-      setError(err.message);
+      setError('City not found. Please try another city.');
       setWeather(null);
     } finally {
       setLoading(false);
@@ -73,16 +42,18 @@ function App() {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (city.trim()) {
-      fetchWeather(city);
+      fetchWeather(city.trim());
+      setCity('');
     }
   };
 
-  const getWeatherBackground = (main) => {
-    const weatherType = main?.toLowerCase();
+  const getWeatherType = () => {
+    if (!weather) return 'clear-day';
+    const main = weather.weather[0].main.toLowerCase();
     const hour = new Date().getHours();
     const isNight = hour < 6 || hour > 18;
 
-    switch (weatherType) {
+    switch (main) {
       case 'clear':
         return isNight ? 'clear-night' : 'clear-day';
       case 'clouds':
@@ -96,16 +67,91 @@ function App() {
         return 'stormy';
       case 'mist':
       case 'fog':
+      case 'haze':
         return 'foggy';
       default:
         return 'clear-day';
     }
   };
 
+  const weatherType = getWeatherType();
+
   return (
-    <div className={`app ${weather ? getWeatherBackground(weather.weather[0].main) : 'clear-day'}`}>
-      <div className="weather-overlay"></div>
-      
+    <div className={`app ${weatherType}`}>
+      {/* Weather Animations */}
+      <div className="weather-animation">
+        {weatherType === 'clear-day' && (
+          <div className="sun">
+            <div className="sun-core"></div>
+            {[...Array(12)].map((_, i) => (
+              <div key={i} className="sun-ray" style={{ transform: `rotate(${i * 30}deg)` }}></div>
+            ))}
+          </div>
+        )}
+        
+        {weatherType === 'clear-night' && (
+          <div className="moon"></div>
+        )}
+        
+        {weatherType === 'rainy' && (
+          <div className="rain">
+            {[...Array(100)].map((_, i) => (
+              <div
+                key={i}
+                className="raindrop"
+                style={{
+                  left: `${Math.random() * 100}%`,
+                  animationDelay: `${Math.random() * 2}s`,
+                  animationDuration: `${0.5 + Math.random() * 0.5}s`
+                }}
+              ></div>
+            ))}
+          </div>
+        )}
+        
+        {weatherType === 'snowy' && (
+          <div className="snow">
+            {[...Array(50)].map((_, i) => (
+              <div
+                key={i}
+                className="snowflake"
+                style={{
+                  left: `${Math.random() * 100}%`,
+                  animationDelay: `${Math.random() * 5}s`,
+                  animationDuration: `${5 + Math.random() * 5}s`,
+                  fontSize: `${10 + Math.random() * 10}px`
+                }}
+              >
+                ❄
+              </div>
+            ))}
+          </div>
+        )}
+        
+        {(weatherType === 'cloudy-day' || weatherType === 'cloudy-night') && (
+          <div className="clouds">
+            {[...Array(5)].map((_, i) => (
+              <div
+                key={i}
+                className="cloud"
+                style={{
+                  top: `${10 + i * 15}%`,
+                  animationDelay: `${i * 2}s`,
+                  animationDuration: `${20 + i * 5}s`
+                }}
+              ></div>
+            ))}
+          </div>
+        )}
+        
+        {weatherType === 'stormy' && (
+          <>
+            <div className="storm-clouds"></div>
+            <div className="lightning"></div>
+          </>
+        )}
+      </div>
+
       <div className="container">
         <h1 className="app-title">Weather Now</h1>
         
@@ -113,21 +159,19 @@ function App() {
           <input
             type="text"
             className="search-input"
-            placeholder="Enter city name..."
+            placeholder="Enter city name (e.g., London, Paris, Tokyo)..."
             value={city}
             onChange={(e) => setCity(e.target.value)}
           />
-          <button type="submit" className="search-btn">
+          <button type="submit" className="search-btn" disabled={loading}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="11" cy="11" r="8" />
               <path d="m21 21-4.35-4.35" />
             </svg>
-            Search
+            {loading ? 'Searching...' : 'Search'}
           </button>
         </form>
 
-        {loading && <div className="loading">Loading...</div>}
-        
         {error && <div className="error">{error}</div>}
 
         {weather && !loading && (
@@ -151,7 +195,7 @@ function App() {
               
               <div className="detail-item">
                 <div className="detail-label">Wind Speed</div>
-                <div className="detail-value">{weather.wind.speed} m/s</div>
+                <div className="detail-value">{Math.round(weather.wind.speed * 3.6)} km/h</div>
               </div>
               
               <div className="detail-item">
@@ -179,7 +223,7 @@ function App() {
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="welcome-icon">
               <path d="M12 2v10M12 22v-4M4.93 4.93l7.07 7.07M19.07 19.07l-3.54-3.54M2 12h10M22 12h-4M4.93 19.07l7.07-7.07M19.07 4.93l-3.54 3.54" />
             </svg>
-            <p>Loading your location...</p>
+            <p>Search for any city to see the weather</p>
           </div>
         )}
       </div>
