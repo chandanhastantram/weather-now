@@ -7,7 +7,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const API_KEY = '892a3849902189bbd26fba0fc1af621c';
+  const API_KEY = '16b3458051282777e4706598453694d0';
 
   // Load default location on mount
   useEffect(() => {
@@ -28,11 +28,13 @@ function App() {
       if (response.ok && data.cod === 200) {
         setWeather(data);
         setError('');
+      } else if (data.cod === 401) {
+        throw new Error('API key is activating. Please wait 2 hours after key generation.');
       } else {
         throw new Error(data.message || 'City not found');
       }
     } catch (err) {
-      setError(`Unable to find weather for "${cityName}". Please check the city name and try again.`);
+      setError(err.message || `Unable to find weather for "${cityName}".`);
       setWeather(null);
     } finally {
       setLoading(false);
