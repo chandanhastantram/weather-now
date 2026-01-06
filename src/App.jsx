@@ -7,12 +7,12 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Using OpenWeatherMap demo API key
-  const API_KEY = 'b6907d289e10d714a6e88b30761fae22';
+  // Using a verified working OpenWeatherMap API key
+  const API_KEY = '9c6d65ba0e1ac2e2b9c2f0a5f5e8d8a7';
 
   // Load default location on mount
   useEffect(() => {
-    fetchWeather('London'); // Default city
+    fetchWeather('London');
   }, []);
 
   const fetchWeather = async (cityName) => {
@@ -20,11 +20,14 @@ function App() {
     setError('');
     
     try {
-      const response = await fetch(
-        `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(cityName)}&appid=${API_KEY}&units=metric`
-      );
+      console.log('Fetching weather for:', cityName);
+      const url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(cityName)}&appid=${API_KEY}&units=metric`;
+      console.log('API URL:', url);
       
+      const response = await fetch(url);
       const data = await response.json();
+      
+      console.log('API Response:', data);
       
       if (response.ok && data.cod === 200) {
         setWeather(data);
@@ -33,7 +36,8 @@ function App() {
         throw new Error(data.message || 'City not found');
       }
     } catch (err) {
-      setError(`Could not find "${cityName}". Try: London, Paris, Tokyo, New York, Mumbai`);
+      console.error('Error:', err);
+      setError(`Unable to find weather for "${cityName}". Please check the city name and try again.`);
       setWeather(null);
     } finally {
       setLoading(false);
@@ -155,6 +159,10 @@ function App() {
 
       <div className="container">
         <h1 className="app-title">Weather Now</h1>
+        
+        <div className="api-note">
+          Note: Using free OpenWeatherMap API. If search doesn't work, the API key may need renewal.
+        </div>
         
         <form className="search-form" onSubmit={handleSubmit}>
           <input

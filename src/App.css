@@ -224,9 +224,17 @@
   font-weight: 700;
   text-align: center;
   color: var(--white);
-  margin-bottom: 35px;
+  margin-bottom: 15px;
   letter-spacing: -1px;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.api-note {
+  text-align: center;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 25px;
+  font-style: italic;
 }
 
 .search-form {
@@ -283,7 +291,7 @@
 .error {
   text-align: center;
   padding: 15px;
-  font-size: 15px;
+  font-size: 14px;
   background: rgba(255, 107, 53, 0.2);
   backdrop-filter: blur(10px);
   color: var(--white);
