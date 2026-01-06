@@ -7,7 +7,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const API_KEY = '16b3458051282777e4706598453694d0';
+  const API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY;
 
   // Load default location on mount
   useEffect(() => {
